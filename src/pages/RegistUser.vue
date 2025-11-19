@@ -65,11 +65,13 @@ const handleSubmit = () => {
 .regist {
   display: flex;
   justify-content: center;
-  padding: 3.5rem 1.5rem 4rem;
+  align-items: center;
+  min-height: 70vh;
+  padding: 2.5rem 1rem;
 }
 
 .regist__panel {
-  width: min(720px, 100%);
+  width: 90%;
   margin: 0 auto;
   background: #fff;
   border-radius: 1rem;

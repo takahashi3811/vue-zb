@@ -23,7 +23,8 @@ import { RouterLink, RouterView } from 'vue-router'
 <style scoped>
 .layout {
   min-height: 100vh;
-  max-width: 100vw;
+  width: 90vw;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
 }
@@ -62,14 +63,15 @@ import { RouterLink, RouterView } from 'vue-router'
 
 .layout__main {
   flex: 1;
-  width: 100%;
+  width: 97vw;
   background-color: #f8fafc;
   display: flex;
   justify-content: center;
+  align-items: center;
 }
 
 .layout__container {
-  width: min(1200px, 100%);
+  width: 90%;
   margin: 0 auto;
   padding: 2.5rem 1.5rem 3.5rem;
 }
