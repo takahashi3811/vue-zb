@@ -84,6 +84,9 @@ const handleChange = (event) => {
   font-family: inherit;
   color: #111827;
   background-color: #fff;
+  min-height: 2.75rem;
+  line-height: 1.4;
+  appearance: none;
 }
 
 .base-date-input:focus {

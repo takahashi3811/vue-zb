@@ -5,6 +5,7 @@ import BaseButton from '../components/base/BaseButton.vue'
 import BaseFormField from '../components/base/BaseFormField.vue'
 import BaseDateInput from '../components/base/BaseDateInput.vue'
 import BaseTable from '../components/base/BaseTable.vue'
+import BaseHeading from '../components/base/BaseHeading.vue'
 import { createEmptyUser, type User } from '../models/user'
 import { validateUserField, type UserField } from '../validation/userRules'
 
@@ -92,7 +93,9 @@ const handleSubmit = () => {
   <section class="regist">
     <div class="regist__panel">
       <div class="regist__header">
-        <h1>ユーザー登録</h1>
+        <BaseHeading :level="1" align="center" class="regist__title">
+          ユーザー登録
+        </BaseHeading>
         <div class="regist__header-button">
           <BaseButton type="button" :disabled="!isValid" @click="handleSubmit">登録</BaseButton>
         </div>
@@ -222,9 +225,10 @@ const handleSubmit = () => {
   margin-bottom: 1.5rem;
 }
 
-.regist__panel h1 {
+.regist__title {
   text-align: center;
   margin: 0 0 1rem 0;
+  color: #111827;
 }
 
 .regist__header-button {
