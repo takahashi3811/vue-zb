@@ -1,25 +1,90 @@
-<script setup>
-import { reactive, computed } from 'vue'
+<script setup lang="ts">
+import { reactive, computed, watch } from 'vue'
 import BaseInput from '../components/base/BaseInput.vue'
-import BaseLabel from '../components/base/BaseLabel.vue'
 import BaseButton from '../components/base/BaseButton.vue'
-import SearchComponent from '../components/SearchComponent.vue'
-import BaseTable from '../components/base/BaseTable.vue'
+import BaseFormField from '../components/base/BaseFormField.vue'
 import BaseDateInput from '../components/base/BaseDateInput.vue'
+import BaseTable from '../components/base/BaseTable.vue'
+import { createEmptyUser, type User } from '../models/user'
+import { validateUserField, type UserField } from '../validation/userRules'
 
-const form = reactive({
-  name: '',
-  email: '',
-  password: '',
+const form = reactive<User>(createEmptyUser())
+const touched = reactive<Record<UserField, boolean>>({
+  employeeCode: false,
+  employeeName: false,
+  email: false,
+  password: false,
+  passwordConfirm: false,
+  expiredAt: false,
+})
+const errors = reactive<Partial<Record<UserField, string>>>({})
+
+const setError = (field: UserField, message = '') => {
+  errors[field] = message
+}
+
+const validateField = (field: UserField) => {
+  setError(field, validateUserField(field, form))
+}
+
+const handleBlur = (field: UserField) => {
+  touched[field] = true
+  validateField(field)
+}
+
+const watchedFields: UserField[] = [
+  'employeeCode',
+  'employeeName',
+  'email',
+  'password',
+  'passwordConfirm',
+  'expiredAt',
+]
+
+watchedFields.forEach((field) => {
+  watch(
+    () => form[field],
+    () => validateField(field),
+    { immediate: true }
+  )
 })
 
+watch(
+  () => form.password,
+  () => validateField('passwordConfirm')
+)
+
+const columns = [
+  { key: 'employeeCode', label: '社員コード' },
+  { key: 'employeeName', label: '社員名' },
+  { key: 'email', label: 'メールアドレス' },
+  { key: 'expiredAt', label: '有効期限' },
+]
+
+const data = reactive([
+  {
+    employeeCode: '',
+    employeeName: '',
+    email: '',
+    expiredAt: '',
+  },
+])
+
 const isValid = computed(() => {
-  return form.name && form.email && form.password.length >= 6
+  return (
+    form.employeeCode &&
+    form.employeeName &&
+    form.email &&
+    form.password.length >= 6 &&
+    form.password === form.passwordConfirm &&
+    form.expiredAt &&
+    Object.values(errors).every((msg) => !msg)
+  )
 })
 
 const handleSubmit = () => {
   if (!isValid.value) return
-  alert(`登録しました：${form.name}`)
+  alert(`登録しました：${form.employeeName}`)
 }
 </script>
 
@@ -29,53 +94,103 @@ const handleSubmit = () => {
       <div class="regist__header">
         <h1>ユーザー登録</h1>
         <div class="regist__header-button">
-          <BaseButton type="button" :disabled="!isValid" @click="handleSubmit">登録する</BaseButton>
+          <BaseButton type="button" :disabled="!isValid" @click="handleSubmit">登録</BaseButton>
         </div>
       </div>
       <div class="regist__form">
         <div class="form-grid">
-          <div class="form-field">
-            <BaseLabel for-id="name" required>社員コード</BaseLabel>
-            <BaseInput id="name" v-model="form.name" placeholder="1234567890" autocomplete="name" />
-          </div>
+          <BaseFormField
+            label="社員コード"
+            for-id="employeeCode"
+            required
+            :error="touched.employeeCode ? errors.employeeCode : ''"
+          >
+            <BaseInput
+              id="employeeCode"
+              v-model="form.employeeCode"
+              autocomplete="off"
+              @blur="handleBlur('employeeCode')"
+            />
+          </BaseFormField>
 
-          <div class="form-field">
-            <BaseLabel for-id="password" required>パスワード</BaseLabel>
+          <BaseFormField
+            label="パスワード"
+            for-id="password"
+            required
+            :error="touched.password ? errors.password : ''"
+          >
             <BaseInput
               id="password"
               v-model="form.password"
-              type="text"
+              type="password"
               autocomplete="new-password"
+              @blur="handleBlur('password')"
             />
-          </div>
+          </BaseFormField>
         </div>
+
         <div class="form-grid">
-            <div class="form-field">
-            <BaseLabel for-id="name" required>社員名</BaseLabel>
-            <BaseInput id="name" v-model="form.name" placeholder="山田 太郎" autocomplete="name" />
-          </div>
-          <div class="form-field">
-            <BaseLabel for-id="password" required>パスワード</BaseLabel>
+          <BaseFormField
+            label="社員名"
+            for-id="employeeName"
+            required
+            :error="touched.employeeName ? errors.employeeName : ''"
+          >
             <BaseInput
-              id="password"
-              v-model="form.password"
-              type="text"
-              autocomplete="new-password"
+              id="employeeName"
+              v-model="form.employeeName"
+              autocomplete="name"
+              @blur="handleBlur('employeeName')"
             />
-          </div>
+          </BaseFormField>
+
+          <BaseFormField
+            label="パスワード確認"
+            for-id="passwordConfirm"
+            required
+            :error="touched.passwordConfirm ? errors.passwordConfirm : ''"
+          >
+            <BaseInput
+              id="passwordConfirm"
+              v-model="form.passwordConfirm"
+              type="password"
+              autocomplete="confirm-password"
+              @blur="handleBlur('passwordConfirm')"
+            />
+          </BaseFormField>
         </div>
+
         <div class="form-grid">
-            <div class="form-field">
-            <BaseLabel for-id="email" required>メールアドレス</BaseLabel>
-            <BaseInput id="email" v-model="form.email" type="email" placeholder="taro@example.com" autocomplete="email" />
-          </div>
-          <div class="form-field">
-            <BaseLabel for-id="date" required>有効期限</BaseLabel>
-            <BaseDateInput id="date" v-model="form.date" placeholder="2025-01-01" autocomplete="date" />
-          </div>
+          <BaseFormField
+            label="メールアドレス"
+            for-id="email"
+            required
+            :error="touched.email ? errors.email : ''"
+          >
+            <BaseInput
+              id="email"
+              v-model="form.email"
+              type="email"
+              autocomplete="email"
+              @blur="handleBlur('email')"
+            />
+          </BaseFormField>
+          <BaseFormField
+            label="有効期限"
+            for-id="expiredAt"
+            required
+            :error="touched.expiredAt ? errors.expiredAt : ''"
+          >
+            <BaseDateInput
+              id="expiredAt"
+              v-model="form.expiredAt"
+              autocomplete="off"
+              @blur="handleBlur('expiredAt')"
+            />
+          </BaseFormField>
         </div>
       </div>
-      <SearchComponent />
+      <!-- <SearchComponent /> -->
       <BaseTable :data="data" :columns="columns" />
     </div>
   </section>
@@ -126,37 +241,22 @@ const handleSubmit = () => {
 .regist__form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0.25rem;
 }
 
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem 1.25rem;
+  gap: 1.5rem 2rem;
 }
 
-.form-field {
-  display: flex;
-  flex-direction: column;
-}
-
-.form-field--full {
-  grid-column: 1 / -1;
-}
-
-.hint {
-  margin-top: 0.35rem;
-  font-size: 0.85rem;
-  color: #64748b;
+.form-grid + .form-grid {
+  margin-top: 0;
 }
 
 @media (max-width: 640px) {
   .form-grid {
     grid-template-columns: 1fr;
-  }
-
-  .form-field--full {
-    grid-column: auto;
   }
 }
 </style>

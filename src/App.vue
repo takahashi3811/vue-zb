@@ -30,6 +30,9 @@ import { RouterLink, RouterView } from 'vue-router'
 }
 
 .layout__header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
   width: 97vw;
   justify-content: space-between;
@@ -68,6 +71,7 @@ import { RouterLink, RouterView } from 'vue-router'
   display: flex;
   justify-content: center;
   align-items: center;
+  padding-top: 1.5rem;
 }
 
 .layout__container {
