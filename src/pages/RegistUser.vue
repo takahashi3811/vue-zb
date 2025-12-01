@@ -6,6 +6,7 @@ import BaseFormField from '../components/base/BaseFormField.vue'
 import BaseDateInput from '../components/base/BaseDateInput.vue'
 import BaseTable from '../components/base/BaseTable.vue'
 import BaseHeading from '../components/base/BaseHeading.vue'
+import SearchComponent from '../components/SearchComponent.vue'
 import { createEmptyUser, type User } from '../models/user'
 import { validateUserField, type UserField } from '../validation/userRules'
 
@@ -100,6 +101,7 @@ const handleSubmit = () => {
           <BaseButton type="button" :disabled="!isValid" @click="handleSubmit">登録</BaseButton>
         </div>
       </div>
+      <h3 class="regist__description">社員情報</h3>
       <div class="regist__form">
         <div class="form-grid">
           <BaseFormField
@@ -192,7 +194,25 @@ const handleSubmit = () => {
             />
           </BaseFormField>
         </div>
+        <h3 class="regist__description">権限情報</h3>
+        <div class="form-grid form-grid--stacked">
+          <BaseFormField
+            label="システムアクセス範囲"
+            for-id="systemAccessRange"
+            required
+          >
+            <SearchComponent />
+          </BaseFormField>
+          <BaseFormField
+            label="仕訳承認レベル"
+            for-id="approvalLevel"
+            required
+          >
+            <SearchComponent />
+          </BaseFormField>
+        </div>
       </div>
+
       <!-- <SearchComponent /> -->
       <BaseTable :data="data" :columns="columns" />
     </div>
@@ -256,6 +276,10 @@ const handleSubmit = () => {
 
 .form-grid + .form-grid {
   margin-top: 0;
+}
+
+.form-grid--stacked :deep(.base-form-field) {
+  grid-column: 1 / 2;
 }
 
 @media (max-width: 640px) {
