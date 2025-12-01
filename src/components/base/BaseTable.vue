@@ -36,7 +36,10 @@ const props = defineProps({
 <style scoped>
 .base-table-wrapper {
   overflow-x: auto;
+  overflow-y: auto;
   width: 100%;
+  max-height: 400px;
+  position: relative;
 }
 
 .base-table {
@@ -56,6 +59,7 @@ const props = defineProps({
   padding: 0.75rem 1rem;
   text-align: left;
   border-bottom: 1px solid #e4e7ec;
+  color: black;
 }
 
 .base-table th {
@@ -63,10 +67,13 @@ const props = defineProps({
   font-weight: 600;
   color: #111827;
   white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .base-table td {
-  color: #475467;
+  color: black;
 }
 
 .base-table tbody tr {
@@ -94,6 +101,11 @@ const props = defineProps({
 
 .base-table--bordered th {
   border-bottom: 2px solid #d0d5dd;
+}
+
+/* thead内のinput要素もstickyの背景を維持 */
+.base-table thead th input {
+  background-color: #f8fafc;
 }
 </style>
 

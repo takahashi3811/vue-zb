@@ -7,7 +7,7 @@ const props = defineProps({
   variant: {
     type: String,
     default: 'primary',
-    validator: (value) => ['primary', 'secondary', 'ghost'].includes(value),
+    validator: (value) => ['primary', 'secondary', 'ghost', 'transaction', 'event'].includes(value),
   },
   disabled: {
     type: Boolean,
@@ -81,6 +81,27 @@ const props = defineProps({
 
 .base-button--ghost:not(:disabled):hover {
   background-color: rgba(37, 99, 235, 0.1);
+}
+
+.base-button--transaction {
+  background-color: #f97316;
+  border-color: #f97316;
+  color: #fff;
+}
+
+.base-button--transaction:not(:disabled):hover {
+  background-color: #ea580c;
+}
+
+.base-button--event {
+  background-color: #fef3c7;
+  border-color: #fde68a;
+  color: #111827;
+}
+
+.base-button--event:not(:disabled):hover {
+  background-color: #fde68a;
+  border-color: #fbbf24;
 }
 
 .base-button--full {

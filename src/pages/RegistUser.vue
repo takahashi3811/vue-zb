@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, computed, watch } from 'vue'
+import { reactive, computed, watch, ref } from 'vue'
 import BaseInput from '../components/base/BaseInput.vue'
 import BaseButton from '../components/base/BaseButton.vue'
 import BaseFormField from '../components/base/BaseFormField.vue'
@@ -9,6 +9,12 @@ import BaseHeading from '../components/base/BaseHeading.vue'
 import SearchComponent from '../components/SearchComponent.vue'
 import { createEmptyUser, type User } from '../models/user'
 import { validateUserField, type UserField } from '../validation/userRules'
+import {
+  sampleDivisionData,
+  type DivisionData,
+  createEmptyDivision,
+  generateNewDivisionId,
+} from '../models/division'
 
 const form = reactive<User>(createEmptyUser())
 const touched = reactive<Record<UserField, boolean>>({
@@ -88,6 +94,27 @@ const handleSubmit = () => {
   if (!isValid.value) return
   alert(`登録しました：${form.employeeName}`)
 }
+
+// 部署・所属データ
+const divisionData = ref<DivisionData[]>([...sampleDivisionData])
+const selectedMainId = ref<number>(
+  divisionData.value.find((item) => item.isMain)?.id || divisionData.value[0]?.id || 1
+)
+
+// 主所属の変更処理
+const handleMainChange = (id: number) => {
+  selectedMainId.value = id
+  divisionData.value.forEach((item) => {
+    item.isMain = item.id === id
+  })
+}
+
+// テーブル行追加処理
+const handleAddRow = () => {
+  const newId = generateNewDivisionId(divisionData.value)
+  const newRow = createEmptyDivision(newId)
+  divisionData.value.push(newRow)
+}
 </script>
 
 <template>
@@ -98,7 +125,7 @@ const handleSubmit = () => {
           ユーザー登録
         </BaseHeading>
         <div class="regist__header-button">
-          <BaseButton type="button" :disabled="!isValid" @click="handleSubmit">登録</BaseButton>
+          <BaseButton type="button" variant="transaction" :disabled="!isValid" @click="handleSubmit">登録</BaseButton>
         </div>
       </div>
       <h3 class="regist__description">社員情報</h3>
@@ -213,8 +240,69 @@ const handleSubmit = () => {
         </div>
       </div>
 
-      <!-- <SearchComponent /> -->
-      <BaseTable :data="data" :columns="columns" />
+      <!-- 部署・所属テーブル -->
+      <div class="regist__table-header">
+        <h3 class="regist__description">部署・所属情報</h3>
+        <BaseButton variant="event" @click="handleAddRow">行を追加</BaseButton>
+      </div>
+      <BaseTable variant="bordered" :full-width="true">
+        <template #thead>
+          <tr>
+            <th>
+              <input type="text" value="主所属" readonly />
+            </th>
+            <th>
+              <input type="text" value="部署コード" readonly />
+            </th>
+            <th>
+              <input type="text" value="部署名称" readonly />
+            </th>
+            <th>
+              <input type="text" value="所属コード" readonly />
+            </th>
+            <th>
+              <input type="text" value="所属名称" readonly />
+            </th>
+            <th>
+              <input type="text" value="適用開始日" readonly />
+            </th>
+            <th>
+              <input type="text" value="適用終了日" readonly />
+            </th>
+          </tr>
+        </template>
+        <template #tbody>
+          <tr v-for="row in divisionData" :key="row.id">
+            <td style="text-align: center;">
+              <input
+                type="radio"
+                name="mainDivision"
+                :value="row.id"
+                :checked="selectedMainId === row.id"
+                @change="handleMainChange(row.id)"
+              />
+            </td>
+            <td>
+              <input type="text" v-model="row.departmentCode" />
+            </td>
+            <td>
+              <input type="text" v-model="row.departmentName" />
+            </td>
+            <td>
+              <input type="text" v-model="row.divisionCode" />
+            </td>
+            <td>
+              <input type="text" v-model="row.divisionName" />
+            </td>
+            <td>
+              <input type="date" v-model="row.startDate" />
+            </td>
+            <td>
+              <input type="date" v-model="row.endDate" />
+            </td>
+          </tr>
+        </template>
+      </BaseTable>
     </div>
   </section>
 </template>
@@ -262,6 +350,18 @@ const handleSubmit = () => {
   margin-bottom: 1.5rem;
 }
 
+.regist__table-header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.regist__table-header .regist__description {
+  margin-bottom: 0;
+}
+
 .regist__form {
   display: flex;
   flex-direction: column;
@@ -286,5 +386,42 @@ const handleSubmit = () => {
   .form-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* テーブル内のinput要素のスタイル */
+.base-table input[type="radio"] {
+  cursor: pointer;
+}
+
+.base-table input[type="text"],
+.base-table input[type="date"] {
+  width: 100%;
+  border: 1px solid #e4e7ec;
+  background: #fff;
+  padding: 0.5rem;
+  font-size: inherit;
+  color: #000;
+  font-family: inherit;
+  border-radius: 4px;
+}
+
+.base-table input[type="text"]:focus,
+.base-table input[type="date"]:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+  border-color: #2563eb;
+}
+
+/* thead内のinput要素（readonly）のスタイル */
+.base-table thead input[type="text"] {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #111827;
+  cursor: default;
+}
+
+.base-table thead input[type="text"]:focus {
+  outline: none;
+  border-color: #e4e7ec;
 }
 </style>
