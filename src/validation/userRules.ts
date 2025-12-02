@@ -12,11 +12,11 @@ type Rule = {
 }
 
 export const userValidationRules: Record<UserField, Rule[]> = {
-  employeeCode: [
+  userCode: [
     { required: true, message: '社員コードを入力してください' },
     { length: 6, message: '社員コードは6文字で入力してください' },
   ],
-  employeeName: [{ required: true, message: '社員名を入力してください' }],
+  userName: [{ required: true, message: '社員名を入力してください' }],
   email: [
     { required: true, message: 'メールアドレスを入力してください' },
     {

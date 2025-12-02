@@ -1,6 +1,6 @@
 export interface User {
-  employeeCode: string
-  employeeName: string
+  userCode: string
+  userName: string
   email: string
   password: string
   passwordConfirm: string
@@ -8,8 +8,8 @@ export interface User {
 }
 
 export const createEmptyUser = (): User => ({
-  employeeCode: '',
-  employeeName: '',
+  userCode: '',
+  userName: '',
   email: '',
   password: '',
   passwordConfirm: '',

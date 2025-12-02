@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { reactive, computed, watch, ref } from 'vue'
+import BaseInput from '../components/base/BaseInput.vue'
 import BaseButton from '../components/base/BaseButton.vue'
+import BaseFormField from '../components/base/BaseFormField.vue'
+import BaseDateInput from '../components/base/BaseDateInput.vue'
 import BaseTable from '../components/base/BaseTable.vue'
 import BaseHeading from '../components/base/BaseHeading.vue'
+import SearchComponent from '../components/SearchComponent.vue'
 import { createEmptyUser, type User } from '../models/user'
+import { validateUserField, type UserField } from '../validation/userRules'
 import {
   sampleDivisionData,
   type DivisionData,
@@ -12,10 +17,88 @@ import {
 } from '../models/division'
 
 const form = reactive<User>(createEmptyUser())
+const touched = reactive<Record<UserField, boolean>>({
+  employeeCode: false,
+  employeeName: false,
+  email: false,
+  password: false,
+  passwordConfirm: false,
+  expiredAt: false,
+})
+const errors = reactive<Partial<Record<UserField, string>>>({})
 
+const setError = (field: UserField, message = '') => {
+  errors[field] = message
+}
+
+const validateField = (field: UserField) => {
+  setError(field, validateUserField(field, form))
+}
+
+const handleBlur = (field: UserField) => {
+  touched[field] = true
+  validateField(field)
+}
+
+const watchedFields: UserField[] = [
+  'employeeCode',
+  'employeeName',
+  'email',
+  'password',
+  'passwordConfirm',
+  'expiredAt',
+]
+
+watchedFields.forEach((field) => {
+  watch(
+    () => form[field],
+    () => validateField(field),
+    { immediate: true }
+  )
+})
+
+watch(
+  () => form.password,
+  () => validateField('passwordConfirm')
+)
+
+const columns = [
+  { key: 'employeeCode', label: '社員コード' },
+  { key: 'employeeName', label: '社員名' },
+  { key: 'email', label: 'メールアドレス' },
+  { key: 'expiredAt', label: '有効期限' },
+]
+
+const data = reactive([
+  {
+    employeeCode: '',
+    employeeName: '',
+    email: '',
+    expiredAt: '',
+  },
+])
+
+const isValid = computed(() => {
+  return (
+    form.employeeCode &&
+    form.employeeName &&
+    form.email &&
+    form.password.length >= 6 &&
+    form.password === form.passwordConfirm &&
+    form.expiredAt &&
+    Object.values(errors).every((msg) => !msg)
+  )
+})
+
+const handleSubmit = () => {
+  if (!isValid.value) return
+  alert(`登録しました：${form.employeeName}`)
+}
+
+// 部署・所属データ
 const divisionData = ref<DivisionData[]>([...sampleDivisionData])
-const selectedMainId = ref<number | null>(
-  divisionData.value.find((item) => item.isMain)?.id || divisionData.value[0]?.id || null
+const selectedMainId = ref<number>(
+  divisionData.value.find((item) => item.isMain)?.id || divisionData.value[0]?.id || 1
 )
 
 // 主所属の変更処理
@@ -32,11 +115,6 @@ const handleAddRow = () => {
   const newRow = createEmptyDivision(newId)
   divisionData.value.push(newRow)
 }
-
-// 登録処理
-const handleSubmit = () => {
-  alert(`登録しました：${form.userName}`)
-}
 </script>
 
 <template>
@@ -47,40 +125,118 @@ const handleSubmit = () => {
           ユーザー登録
         </BaseHeading>
         <div class="regist__header-button">
-          <BaseButton type="button" variant="transaction" @click="handleSubmit">登録</BaseButton>
+          <BaseButton type="button" variant="transaction" :disabled="!isValid" @click="handleSubmit">登録</BaseButton>
         </div>
       </div>
       <h3 class="regist__description">社員情報</h3>
       <div class="regist__form">
         <div class="form-grid">
-          <div class="form-grid-item">
-            <span>社員コード</span>
-            <input type="text" v-model="form.userCode" />
-          </div>
-          <div class="form-grid-item">
-            <span>パスワード</span>
-            <input type="password" v-model="form.password" />
-          </div>
+          <BaseFormField
+            label="社員コード"
+            for-id="employeeCode"
+            required
+            :error="touched.employeeCode ? errors.employeeCode : ''"
+          >
+            <BaseInput
+              id="employeeCode"
+              v-model="form.employeeCode"
+              autocomplete="off"
+              @blur="handleBlur('employeeCode')"
+            />
+          </BaseFormField>
+
+          <BaseFormField
+            label="パスワード"
+            for-id="password"
+            required
+            :error="touched.password ? errors.password : ''"
+          >
+            <BaseInput
+              id="password"
+              v-model="form.password"
+              type="password"
+              autocomplete="new-password"
+              @blur="handleBlur('password')"
+            />
+          </BaseFormField>
         </div>
+
         <div class="form-grid">
-          <div class="form-grid-item">
-            <span>社員名</span>
-            <input type="text" v-model="form.userName" />
-          </div>
-          <div class="form-grid-item">
-            <span>パスワード確認</span>
-            <input type="password" v-model="form.passwordConfirm" />
-          </div>
+          <BaseFormField
+            label="社員名"
+            for-id="employeeName"
+            required
+            :error="touched.employeeName ? errors.employeeName : ''"
+          >
+            <BaseInput
+              id="employeeName"
+              v-model="form.employeeName"
+              autocomplete="name"
+              @blur="handleBlur('employeeName')"
+            />
+          </BaseFormField>
+
+          <BaseFormField
+            label="パスワード確認"
+            for-id="passwordConfirm"
+            required
+            :error="touched.passwordConfirm ? errors.passwordConfirm : ''"
+          >
+            <BaseInput
+              id="passwordConfirm"
+              v-model="form.passwordConfirm"
+              type="password"
+              autocomplete="confirm-password"
+              @blur="handleBlur('passwordConfirm')"
+            />
+          </BaseFormField>
         </div>
+
         <div class="form-grid">
-          <div class="form-grid-item">
-            <span>メールアドレス</span>
-            <input type="email" v-model="form.email" />
-          </div>
-          <div class="form-grid-item">
-            <span>有効期限</span>
-            <input type="date" v-model="form.expiredAt" />
-          </div>
+          <BaseFormField
+            label="メールアドレス"
+            for-id="email"
+            required
+            :error="touched.email ? errors.email : ''"
+          >
+            <BaseInput
+              id="email"
+              v-model="form.email"
+              type="email"
+              autocomplete="email"
+              @blur="handleBlur('email')"
+            />
+          </BaseFormField>
+          <BaseFormField
+            label="有効期限"
+            for-id="expiredAt"
+            required
+            :error="touched.expiredAt ? errors.expiredAt : ''"
+          >
+            <BaseDateInput
+              id="expiredAt"
+              v-model="form.expiredAt"
+              autocomplete="off"
+              @blur="handleBlur('expiredAt')"
+            />
+          </BaseFormField>
+        </div>
+        <h3 class="regist__description">権限情報</h3>
+        <div class="form-grid form-grid--stacked">
+          <BaseFormField
+            label="システムアクセス範囲"
+            for-id="systemAccessRange"
+            required
+          >
+            <SearchComponent />
+          </BaseFormField>
+          <BaseFormField
+            label="仕訳承認レベル"
+            for-id="approvalLevel"
+            required
+          >
+            <SearchComponent />
+          </BaseFormField>
         </div>
       </div>
 
@@ -171,8 +327,8 @@ const handleSubmit = () => {
   border: 1px solid #e4e7ec;
   padding: 2.5rem;
   box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
+  
 }
-
 .regist__header {
   margin-bottom: 1.5rem;
 }
@@ -222,36 +378,8 @@ const handleSubmit = () => {
   margin-top: 0;
 }
 
-.form-grid-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.form-grid-item span {
-  font-weight: 500;
-  color: #111827;
-}
-
-.form-grid-item input {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #d0d5dd;
-  border-radius: 0.375rem;
-  font-size: 0.95rem;
-  color: #111827;
-  background: #fff;
-}
-
-.form-grid-item input:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.form-grid-item input:disabled {
-  background-color: #f2f4f7;
-  cursor: not-allowed;
+.form-grid--stacked :deep(.base-form-field) {
+  grid-column: 1 / 2;
 }
 
 @media (max-width: 640px) {
